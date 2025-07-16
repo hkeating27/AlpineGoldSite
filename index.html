@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Referral Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { margin: 5px 0; display: block; }
+  </style>
+</head>
+<body>
+  <h2>Referral Form</h2>
+  <label>First Name:</label>
+  <input type="text" id="first_name" required>
+
+  <label>Last Name:</label>
+  <input type="text" id="last_name" required>
+
+  <label>Referred By:</label>
+  <input type="text" id="referred_by" readonly>
+
+  <button onclick="submitForm()">Submit</button>
+
+  <br>
+  <a href="referrals.html">See Referrals List</a>
+
+  <script>
+    // Function to read "ref" parameter from URL
+    function getReferrerFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('ref') || '';
+    }
+
+    // Get referrer and set field
+    const referrer = getReferrerFromURL();
+    document.getElementById('referred_by').value = referrer;
+
+    // Optionally remove ?ref=... from the URL
+    if (referrer) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function submitForm() {
+      const data = {
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        referred_by: document.getElementById('referred_by').value
+      };
+
+      fetch('http://localhost:5000/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to submit');
+        return response.text();
+      })
+      .then(msg => {
+        alert(msg);
+        // Optionally clear form after submit
+        document.getElementById('first_name').value = '';
+        document.getElementById('last_name').value = '';
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Error submitting data');
+      });
+    }
+  </script>
+</body>
+</html>
