@@ -16,56 +16,46 @@
   <input type="text" id="last_name" required>
 
   <label>Referred By:</label>
-  <input type="text" id="referred_by" readonly>
+  <input type="text" id="referred_by" placeholder="Referred By">
 
   <button onclick="submitForm()">Submit</button>
 
   <br>
   <a href="referrals.html">See Referrals List</a>
 
-  <script>
-    // Function to read "ref" parameter from URL
-    function getReferrerFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('ref') || '';
-    }
+<script>
+  // grab the input
+  const refInput = document.getElementById('referred_by');
 
-    // Get referrer and set field
-    const referrer = getReferrerFromURL();
-    document.getElementById('referred_by').value = referrer;
+  // read the URL param
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
 
-    // Optionally remove ?ref=... from the URL
-    if (referrer) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+  if (ref) {
+    // if there *is* a ref= in the URL, fill and lock the field
+    refInput.value = ref;
+    refInput.readOnly = true;
+  } else {
+    // otherwise leave it empty and editable
+    refInput.placeholder = 'Type who referred you';
+  }
 
-    function submitForm() {
-      const data = {
-        first_name: document.getElementById('first_name').value,
-        last_name: document.getElementById('last_name').value,
-        referred_by: document.getElementById('referred_by').value
-      };
+  function submitForm() {
+    const data = {
+      first_name: document.getElementById('first_name').value,
+      last_name: document.getElementById('last_name').value,
+      referred_by: refInput.value
+    };
 
-      fetch('http://localhost:5000/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('Failed to submit');
-        return response.text();
-      })
-      .then(msg => {
-        alert(msg);
-        // Optionally clear form after submit
-        document.getElementById('first_name').value = '';
-        document.getElementById('last_name').value = '';
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Error submitting data');
-      });
-    }
-  </script>
+    fetch('/add', {  // since you're on Render, this is same-origin
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(r => r.text())
+    .then(msg => alert(msg))
+    .catch(e => { console.error(e); alert('Submit failed'); });
+  }
+</script>
 </body>
 </html>
