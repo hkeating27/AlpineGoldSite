@@ -10,34 +10,47 @@
 <body>
   <h2>See People Referred By</h2>
   <label>Referrer Name:</label>
-  <input type="text" id="query_referrer">
+  <input type="text" id="query_referrer" placeholder="Type a name...">
   <button onclick="getReferred()">Get List</button>
 
   <ul id="result_list"></ul>
 
   <script>
-    function getReferred() {
-      const referrer = document.getElementById('query_referrer').value;
+    // If someone pre‑linked with ?referred_by=XXX, fill it in on load:
+    document.addEventListener('DOMContentLoaded', () => {
+      const p = new URLSearchParams(window.location.search);
+      const pre = p.get('referred_by');
+      if (pre) {
+        document.getElementById('query_referrer').value = pre;
+        getReferred();
+      }
+    });
 
-      fetch(`http://localhost:5000/get_by_referrer?referred_by=${encodeURIComponent(referrer)}`)
-        .then(response => response.json())
+    function getReferred() {
+      const ref = document.getElementById('query_referrer').value.trim();
+      if (!ref) return alert('Please enter a referrer name.');
+
+      // NOTE: use a *relative* URL, not hard‑coded localhost
+      fetch(`/get_by_referrer?referred_by=${encodeURIComponent(ref)}`)
+        .then(res => {
+          if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+          return res.json();
+        })
         .then(data => {
           const list = document.getElementById('result_list');
-          list.innerHTML = ''; // Clear old results
-
+          list.innerHTML = '';
           if (data.length === 0) {
             list.innerHTML = '<li>No entries found.</li>';
             return;
           }
-
-          data.forEach(person => {
+          data.forEach(([first, last]) => {
             const li = document.createElement('li');
-            li.textContent = person[0] + ' ' + person[1];
+            li.textContent = first + ' ' + last;
             list.appendChild(li);
           });
         })
-        .catch(error => {
-          console.error('Error:', error);
+        .catch(err => {
+          console.error(err);
           alert('Error retrieving list');
         });
     }
