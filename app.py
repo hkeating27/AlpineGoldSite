@@ -29,10 +29,6 @@ def init_db():
 # Initialize the table on startup
 init_db()
 
-@app.route('/')
-def index():
-    return send_from_directory('static', 'index.html')
-
 @app.route('/referrals')
 def referrals_page():
     return send_from_directory('static', 'referrals.html')
@@ -64,6 +60,16 @@ def get_by_referrer():
     cur.close()
     conn.close()
     return jsonify(rows)
+
+@app.route('/$ref=<referrer>')
+def qr_redirect(referrer):
+    # Redirect "/$ref=Dennis" → "/?ref=Dennis"
+    return redirect(url_for('index', ref=referrer))
+
+@app.route('/')
+def index():
+    # serves static/index.html
+    return send_from_directory('static', 'index.html')
 
 if __name__ == '__main__':
     # Render sets PORT for you; default to 5000 locally
