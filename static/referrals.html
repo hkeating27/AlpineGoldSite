@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Referred People</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { margin: 5px 0; display: block; }
+  </style>
+</head>
+<body>
+  <h2>See People Referred By</h2>
+  <label>Referrer Name:</label>
+  <input type="text" id="query_referrer">
+  <button onclick="getReferred()">Get List</button>
+
+  <ul id="result_list"></ul>
+
+  <script>
+    function getReferred() {
+      const referrer = document.getElementById('query_referrer').value;
+
+      fetch(`http://localhost:5000/get_by_referrer?referred_by=${encodeURIComponent(referrer)}`)
+        .then(response => response.json())
+        .then(data => {
+          const list = document.getElementById('result_list');
+          list.innerHTML = ''; // Clear old results
+
+          if (data.length === 0) {
+            list.innerHTML = '<li>No entries found.</li>';
+            return;
+          }
+
+          data.forEach(person => {
+            const li = document.createElement('li');
+            li.textContent = person[0] + ' ' + person[1];
+            list.appendChild(li);
+          });
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error retrieving list');
+        });
+    }
+  </script>
+</body>
+</html>
