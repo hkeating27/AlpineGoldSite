@@ -14,6 +14,10 @@ app.secret_key = os.environ.get('SECRET_KEY', 'change_this!')
 
 DATABASE_URL = os.environ['DATABASE_URL']
 
+@app.route('/register', methods=['GET'])
+def register_page():
+    return send_from_directory('static', 'register.html')
+
 def get_conn():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
 
