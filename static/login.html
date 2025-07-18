@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Referrer Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { margin: 5px 0; display: block; }
+  </style>
+</head>
+<body>
+  <h2>Referrer Login</h2>
+  <p>Logging in as: <strong id="ref-name"></strong></p>
+
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || '';
+    document.getElementById('ref-name').textContent = ref;
+
+    function login() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({username:u, password:p})
+      })
+      .then(r => {
+        if (!r.ok) throw new Error();
+        // on success, go to referrals list for this user
+        window.location.href = `/referrals?referred_by=${encodeURIComponent(ref)}`;
+      })
+      .catch(() => alert('Login failed'));
+    }
+  </script>
+</body>
+</html>
