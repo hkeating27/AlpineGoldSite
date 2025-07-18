@@ -14,7 +14,9 @@
   <input type="text" id="username" placeholder="Username">
   <input type="password" id="password" placeholder="Password">
   <button onclick="login()">Login</button>
-
+<button onclick="window.location.href = `/register?ref=${ref}`">
+  Create Referrer Account
+</button>
   <script>
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref') || '';
