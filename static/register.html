@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Referrer Account</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { margin: 5px 0; display: block; }
+  </style>
+</head>
+<body>
+  <h2>Create Account for Referrer</h2>
+  <p>Referrer: <strong id="ref-name"></strong></p>
+
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <input type="password" id="confirm_password" placeholder="Confirm Password">
+  <button onclick="register()">Create Account</button>
+
+  <script>
+    // Read ?ref= from URL
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || '';
+    document.getElementById('ref-name').textContent = ref;
+
+    function register() {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      const cp = document.getElementById('confirm_password').value;
+      if (!u || !p) return alert('Username and password are required.');
+      if (p !== cp) return alert('Passwords do not match.');
+
+      fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      })
+      .then(res => res.text().then(txt => ({ ok: res.ok, txt })))
+      .then(({ ok, txt }) => {
+        if (ok) {
+          alert('Account created! Please log in.');
+          window.location.href = `/login?ref=${encodeURIComponent(ref)}`;
+        } else {
+          alert('Error: ' + txt);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Registration failed.');
+      });
+    }
+  </script>
+</body>
+</html>
