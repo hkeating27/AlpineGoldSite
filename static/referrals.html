@@ -1,75 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Referred People</title>
+  <title>Your Referrals</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { margin: 5px 0; display: block; }
+    #query_referrer { display: none; }           /* hide the input */
+    #logout { margin-top: 20px; display: block; }
   </style>
 </head>
 <body>
-  <h2>See People Referred By</h2>
-  <label>Referrer Name:</label>
-  <input type="text" id="query_referrer" placeholder="Type a name...">
-  <button onclick="getReferred()">Get List</button>
+  <h2>People You’ve Referred</h2>
+
+  <!-- This is hidden; we auto‑fill it from ?referred_by= -->
+  <input type="text" id="query_referrer">
+
+  <button id="get_list_btn" onclick="getReferred()">Get List</button>
 
   <ul id="result_list"></ul>
 
+  <a id="logout" href="/logout">Log out</a>
+
   <script>
-    // If someone pre‑linked with ?referred_by=XXX, fill it in on load:
     document.addEventListener('DOMContentLoaded', () => {
-      const p = new URLSearchParams(window.location.search);
-      const pre = p.get('referred_by');
-      if (pre) {
-        document.getElementById('query_referrer').value = pre;
-        getReferred();
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('referred_by') || '';
+
+      if (!ref) {
+        // if somehow someone got here without a ref, kick them back to login
+        return window.location.href = `/login`;
       }
+
+      // fill hidden field and lock it
+      const input = document.getElementById('query_referrer');
+      input.value = ref;
+      input.readOnly = true;
+
+      // immediately fetch their list
+      getReferred();
     });
 
     function getReferred() {
-      const ref = document.getElementById('query_referrer').value.trim();
-      if (!ref) return alert('Please enter a referrer name.');
-
-      // NOTE: use a *relative* URL, not hard‑coded localhost
+      const ref = document.getElementById('query_referrer').value;
       fetch(`/get_by_referrer?referred_by=${encodeURIComponent(ref)}`)
         .then(res => {
-          if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+          if (res.status === 401 || res.status === 403) {
+            // not logged in or wrong user → back to login
+            return window.location.href = `/login?ref=${encodeURIComponent(ref)}`;
+          }
+          if (!res.ok) throw new Error();
           return res.json();
         })
         .then(data => {
           const list = document.getElementById('result_list');
           list.innerHTML = '';
           if (data.length === 0) {
-            list.innerHTML = '<li>No entries found.</li>';
+            list.innerHTML = '<li>No one yet—share your code!</li>';
             return;
           }
           data.forEach(([first, last]) => {
             const li = document.createElement('li');
-            li.textContent = first + ' ' + last;
+            li.textContent = `${first} ${last}`;
             list.appendChild(li);
           });
         })
-        .catch(err => {
-          console.error(err);
-          alert('Error retrieving list');
+        .catch(() => {
+          alert('Error retrieving your list');
         });
     }
-     function getReferred() {
-        const ref = document.getElementById('query_referrer').value.trim();
-        fetch(`/get_by_referrer?referred_by=${encodeURIComponent(ref)}`)
-          .then(res => {
-            if (res.status === 401 || res.status === 403) {
-              // not logged in, or wrong user
-              return window.location.href = `/login?ref=${encodeURIComponent(ref)}`;
-            }
-            if (!res.ok) throw new Error();
-            return res.json();
-          })
-          .then(data => {
-            // … populate your list as before …
-          })
-          .catch(() => alert('Error retrieving list'));
-      }
   </script>
 </body>
 </html>
