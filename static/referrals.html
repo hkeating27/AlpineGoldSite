@@ -54,6 +54,22 @@
           alert('Error retrieving list');
         });
     }
+     function getReferred() {
+        const ref = document.getElementById('query_referrer').value.trim();
+        fetch(`/get_by_referrer?referred_by=${encodeURIComponent(ref)}`)
+          .then(res => {
+            if (res.status === 401 || res.status === 403) {
+              // not logged in, or wrong user
+              return window.location.href = `/login?ref=${encodeURIComponent(ref)}`;
+            }
+            if (!res.ok) throw new Error();
+            return res.json();
+          })
+          .then(data => {
+            // … populate your list as before …
+          })
+          .catch(() => alert('Error retrieving list'));
+      }
   </script>
 </body>
 </html>
