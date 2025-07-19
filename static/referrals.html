@@ -7,6 +7,8 @@
     #query_referrer { display: none; }           /* hide the input */
     #logout { margin-top: 20px; display: block; }
   </style>
+  <div id="login-status" style="margin-bottom:1em;"></div>
+
 </head>
 <body>
   <h2>People You’ve Referred</h2>
@@ -38,7 +40,20 @@
       // immediately fetch their list
       getReferred();
     });
-
+      // when page loads
+      document.addEventListener('DOMContentLoaded', () => {
+        // 1) show whoami
+        fetch('/whoami', { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.username) {
+              document.getElementById('login-status')
+                .textContent = `Logged in as ${data.username}`;
+            }
+          });
+      
+        // 2) your existing auto‑fill + getReferred() logic…
+      });
     function getReferred() {
       const ref = document.getElementById('query_referrer').value;
       fetch(`/get_by_referrer?referred_by=${encodeURIComponent(ref)}`)
