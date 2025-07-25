@@ -128,7 +128,7 @@ def get_by_referrer():
 @app.route('/referrals')
 def referrals_page():
     return send_from_directory('static', 'referrals.html')
-    
+        
 @app.route('/whoami')
 def whoami():
     return jsonify(username=session.get('username',''))
