@@ -43,14 +43,16 @@
       // when page loads
       document.addEventListener('DOMContentLoaded', () => {
         // 1) show whoami
-        fetch('/whoami', { credentials: 'include' })
-          .then(r => r.json())
-          .then(data => {
-            if (data.username) {
-              document.getElementById('login-status')
-                .textContent = `Logged in as ${data.username}`;
-            }
-          });
+      fetch('/whoami', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.username) {
+            document.getElementById('login-status').innerHTML =
+              `<a href="/login?ref=${encodeURIComponent(data.username)}">
+                 Logged in as ${data.username}
+               </a>`;
+          }
+        });
       
         // 2) your existing auto‑fill + getReferred() logic…
       });
