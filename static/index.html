@@ -2,60 +2,22 @@
 <html>
 <head>
   <title>Referral Form</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { margin: 5px 0; display: block; }
-  </style>
+  <style>body{font-family:Arial,sans-serif;margin:20px;}input,button,a{margin:5px 0;display:block;}#user-status{margin-bottom:20px;}#view-referrals{margin-top:10px;}</style>
 </head>
 <body>
+  <div id="user-status"></div>
   <h2>Referral Form</h2>
-  <label>First Name:</label>
-  <input type="text" id="first_name" required>
-
-  <label>Last Name:</label>
-  <input type="text" id="last_name" required>
-
-  <label>Referred By:</label>
-  <input type="text" id="referred_by" placeholder="Referred By">
-
+  <label>First Name:</label><input type="text" id="first_name" required>
+  <label>Last Name:</label><input type="text" id="last_name" required>
+  <label>Referred By:</label><input type="text" id="referred_by" placeholder="Type who referred you">
   <button onclick="submitForm()">Submit</button>
-
-  <br>
-  <a href="referrals.html">See Referrals List</a>
-
-<script>
-  // grab the input
-  const refInput = document.getElementById('referred_by');
-
-  // read the URL param
-  const params = new URLSearchParams(window.location.search);
-  const ref = params.get('ref');
-
-  if (ref) {
-    // if there *is* a ref= in the URL, fill and lock the field
-    refInput.value = ref;
-    refInput.readOnly = true;
-  } else {
-    // otherwise leave it empty and editable
-    refInput.placeholder = 'Type who referred you';
-  }
-
-  function submitForm() {
-    const data = {
-      first_name: document.getElementById('first_name').value,
-      last_name: document.getElementById('last_name').value,
-      referred_by: refInput.value
-    };
-
-    fetch('/add', {  // since you're on Render, this is same-origin
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-    .then(r => r.text())
-    .then(msg => alert(msg))
-    .catch(e => { console.error(e); alert('Submit failed'); });
-  }
-</script>
+  <a id="view-referrals" href="#" style="display:none;">View Your Referrals</a>
+  <script>
+    document.addEventListener('DOMContentLoaded',()=>{
+      fetch('/whoami',{credentials:'include'}).then(r=>r.json()).then(d=>{if(d.username){document.getElementById('user-status').innerHTML=`Logged in as <a href="/login?ref=${encodeURIComponent(d.username)}">${d.username}</a> | <a href="/logout">Log out</a>`;let v=document.getElementById('view-referrals');v.href=`/referrals?referred_by=${encodeURIComponent(d.username)}`;v.style.display='block';}});
+      const p=new URLSearchParams(window.location.search),ref=p.get('ref')||'',ri=document.getElementById('referred_by');if(ref){ri.value=ref;ri.readOnly=true;window.history.replaceState(null,document.title,window.location.pathname);}  
+    });
+    function submitForm(){const d={first_name:document.getElementById('first_name').value,last_name:document.getElementById('last_name').value,referred_by:document.getElementById('referred_by').value};fetch('/add',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>{if(!r.ok)throw'';return r.text()}).then(m=>{alert(m);document.getElementById('first_name').value='';document.getElementById('last_name').value='';}).catch(()=>alert('Error'));}
+  </script>
 </body>
 </html>
