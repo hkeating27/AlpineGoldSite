@@ -10,7 +10,7 @@
   <input type="text" id="username" placeholder="Username">
   <input type="password" id="password" placeholder="Password">
   <button onclick="login()">Login</button>
-  <button onclick="window.location.href=`/register?ref=${ref}`">Create Account</button>
+  <button id="create-account">Create Account</button>
   <script>
   // after reading `ref` in your script:
   document.getElementById('create-account').onclick = () => {
