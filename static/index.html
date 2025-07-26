@@ -12,8 +12,7 @@
   <label>Referred By:</label><input type="text" id="referred_by" placeholder="Type who referred you">
   <button onclick="submitForm()">Submit</button>
   <a id="view-referrals" href="#" style="display:none;">View Your Referrals</a>
- <a id="login-btn" href="/login" style="display: block; margin: 10px 0;">Login</a>
-  <script>
+  <a id="login-btn" href="/login" style="display: block; margin: 10px 0;">Login</a><script>
     document.addEventListener('DOMContentLoaded',()=>{
       fetch('/whoami',{credentials:'include'}).then(r=>r.json()).then(d=>{if(d.username){document.getElementById('user-status').innerHTML=`Logged in as <a href="/login?ref=${encodeURIComponent(d.username)}">${d.username}</a> | <a href="/logout">Log out</a>`;let v=document.getElementById('view-referrals');v.href=`/referrals?referred_by=${encodeURIComponent(d.username)}`;v.style.display='block';}});
       const p=new URLSearchParams(window.location.search),ref=p.get('ref')||'',ri=document.getElementById('referred_by');if(ref){ri.value=ref;ri.readOnly=true;window.history.replaceState(null,document.title,window.location.pathname);}  
