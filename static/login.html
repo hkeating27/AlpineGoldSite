@@ -12,8 +12,12 @@
   <button onclick="login()">Login</button>
   <button onclick="window.location.href=`/register?ref=${ref}`">Create Account</button>
   <script>
-    const params=new URLSearchParams(window.location.search),ref=params.get('ref')||'';document.getElementById('ref-name').textContent=ref;
-    function login(){const u=document.getElementById('username').value,p=document.getElementById('password').value;fetch('/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(r=>{if(!r.ok)throw'';window.location.href=`/referrals?referred_by=${encodeURIComponent(ref)}`}).catch(()=>alert('Login failed'));}
+  // after reading `ref` in your script:
+  document.getElementById('create-account').onclick = () => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || '';
+    window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
+  };  
   </script>
 </body>
 </html>
