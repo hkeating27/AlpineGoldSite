@@ -3,61 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Referrer Login</title>
+  <title>Referrer Signup</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { margin: 5px 0; display: block; }
-    #home-btn { margin-bottom: 10px; }
+    input, button { margin: 5px 0; display: block; width: 100%; max-width: 300px; }
+    #login-btn { background: none; border: none; color: blue; text-decoration: underline; cursor: pointer; padding: 0; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <!-- Back to Home button -->
-  <button id="home-btn" onclick="window.location.href='/'">Back to Home</button>
+  <h2>Create a Referral Account</h2>
 
-  <h2>Referrer Login</h2>
-  <p>Logging in as: <strong id="ref-name"></strong></p>
+  <label for="signup-username">Username:</label>
+  <input type="text" id="signup-username" placeholder="Choose a username" required />
 
-  <label for="username">Username:</label>
-  <input type="text" id="username" placeholder="Username" />
+  <label for="signup-email">Email:</label>
+  <input type="email" id="signup-email" placeholder="Your email address" required />
 
-  <label for="password">Password:</label>
-  <input type="password" id="password" placeholder="Password" />
+  <label for="signup-referred">Referred By:</label>
+  <input type="text" id="signup-referred" placeholder="Who referred you (optional)" />
 
+  <button id="signup-btn">Create Account</button>
+
+  <p>Already have an account?</p>
   <button id="login-btn">Login</button>
-  <button id="create-account">Create Account</button>
+
+  <div id="message" style="color: green; margin-top: 10px;"></div>
 
   <script>
-    // Read referrer code from URL (?ref=...)
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref') || '';
-    document.getElementById('ref-name').textContent = ref;
-
-    // Handle Create Account button
-    document.getElementById('create-account').addEventListener('click', () => {
-      window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
-    });
-
-    // Handle Login button
-    document.getElementById('login-btn').addEventListener('click', () => {
-      const u = document.getElementById('username').value.trim();
-      const p = document.getElementById('password').value;
-      if (!u || !p) {
-        return alert('Please enter both username and password.');
+    // Signup handler
+    document.getElementById('signup-btn').addEventListener('click', () => {
+      const username = document.getElementById('signup-username').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const referredBy = document.getElementById('signup-referred').value.trim();
+      if (!username || !email) {
+        return alert('Username and email are required.');
       }
-      fetch('/login', {
+      fetch('/register', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: u, password: p })
+        body: JSON.stringify({ username, password: email, referred_by: referredBy })
       })
-      .then(res => {
-        if (!res.ok) throw new Error();
-        // Redirect to referrals list on success
-        window.location.href = `/referrals?referred_by=${encodeURIComponent(ref)}`;
+      .then(res => res.text().then(txt => ({ ok: res.ok, txt })))
+      .then(({ ok, txt }) => {
+        if (ok) {
+          document.getElementById('message').textContent = 'Account created! Please login.';
+        } else {
+          alert('Error: ' + txt);
+        }
       })
-      .catch(() => {
-        alert('Login failed: please check your username and password.');
+      .catch(err => {
+        console.error(err);
+        alert('Signup failed.');
       });
+    });
+
+    // Login button
+    document.getElementById('login-btn').addEventListener('click', () => {
+      window.location.href = '/login';
     });
   </script>
 </body>
