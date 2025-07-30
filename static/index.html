@@ -1,59 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Referrer Login</title>
+  <title>Referrer Signup</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { margin: 5px 0; display: block; }
+    input, button, a { margin: 5px 0; display: block; }
+    #message { color: green; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h2>Referrer Login</h2>
-  <p>Logging in as: <strong id="ref-name"></strong></p>
+  <h2>Referrer Signup</h2>
 
   <label>Username:</label>
-  <input type="text" id="username" placeholder="Username">
+  <input type="text" id="signup-username" placeholder="Choose a username" required>
 
-  <label>Password:</label>
-  <input type="password" id="password" placeholder="Password">
+  <label>Email:</label>
+  <input type="email" id="signup-email" placeholder="Your email address" required>
 
-  <button id="login-btn">Login</button>
-  <button id="create-account">Create Account</button>
+  <label>Referred By:</label>
+  <input type="text" id="signup-referred" placeholder="Who referred you (optional)">
+
+  <button id="signup-btn">Create Account</button>
+
+  <p>Already have an account? <a href="/login">Login here</a></p>
+
+  <div id="message"></div>
 
   <script>
-    // Read referrer from URL (?ref=...)
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref') || '';
-    document.getElementById('ref-name').textContent = ref;
+    document.getElementById('signup-btn').addEventListener('click', () => {
+      const username = document.getElementById('signup-username').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const referredBy = document.getElementById('signup-referred').value.trim();
+      if (!username || !email) {
+        alert('Username and email are required.');
+        return;
+      }
 
-    // Create Account button handler
-    document.getElementById('create-account').addEventListener('click', () => {
-      window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
-    });
-
-    // Login button handler
-    document.getElementById('login-btn').addEventListener('click', () => {
-      const u = document.getElementById('username').value.trim();
-      const p = document.getElementById('password').value;
-
-      fetch('/login', {
+      fetch('/register', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: u, password: p })
+        body: JSON.stringify({ username: username, password: email })
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Login failed');
-        // On success, redirect to referrals page for this user
-        window.location.href = `/referrals?referred_by=${encodeURIComponent(ref)}`;
+      .then(res => res.text().then(txt => ({ ok: res.ok, txt })))
+      .then(({ ok, txt }) => {
+        if (ok) {
+          document.getElementById('message').textContent = 'Account created! Please login.';
+        } else {
+          alert('Error: ' + txt);
+        }
       })
       .catch(err => {
         console.error(err);
-        alert('Login failed: please check your username and password.');
+        alert('Signup failed.');
       });
     });
   </script>
 </body>
 </html>
+
