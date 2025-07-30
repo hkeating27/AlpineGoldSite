@@ -1,23 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Referrer Login</title>
-  <style>body{font-family:Arial,sans-serif;margin:20px;}input,button{margin:5px 0;display:block;}</style>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { margin: 5px 0; display: block; }
+  </style>
 </head>
 <body>
   <h2>Referrer Login</h2>
   <p>Logging in as: <strong id="ref-name"></strong></p>
+
+  <label>Username:</label>
   <input type="text" id="username" placeholder="Username">
+
+  <label>Password:</label>
   <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+
+  <button id="login-btn">Login</button>
   <button id="create-account">Create Account</button>
+
   <script>
-  // after reading `ref` in your script:
-  document.getElementById('create-account').onclick = () => {
+    // Read referrer from URL (?ref=...)
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref') || '';
-    window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
-  };  
+    document.getElementById('ref-name').textContent = ref;
+
+    // Create Account button handler
+    document.getElementById('create-account').addEventListener('click', () => {
+      window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
+    });
+
+    // Login button handler
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+
+      fetch('/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Login failed');
+        // On success, redirect to referrals page for this user
+        window.location.href = `/referrals?referred_by=${encodeURIComponent(ref)}`;
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Login failed: please check your username and password.');
+      });
+    });
   </script>
 </body>
 </html>
