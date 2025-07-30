@@ -1,23 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Referral Form</title>
-  <style>body{font-family:Arial,sans-serif;margin:20px;}input,button,a{margin:5px 0;display:block;}#user-status{margin-bottom:20px;}#view-referrals{margin-top:10px;}</style>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button, a { margin: 5px 0; display: block; }
+    #user-status { margin-bottom: 20px; }
+    #actions { margin-top: 20px; }
+  </style>
 </head>
 <body>
+  <!-- User status and actions -->
   <div id="user-status"></div>
+  <div id="actions">
+    <a id="login-btn" href="/login" style="display: none;">Login</a>
+    <a id="view-referrals" href="#" style="display: none;">View Your Referrals</a>
+  </div>
+
   <h2>Referral Form</h2>
-  <label>First Name:</label><input type="text" id="first_name" required>
-  <label>Last Name:</label><input type="text" id="last_name" required>
-  <label>Referred By:</label><input type="text" id="referred_by" placeholder="Type who referred you">
-  <button onclick="submitForm()">Submit</button>
-  <a id="view-referrals" href="#" style="display:none;">View Your Referrals</a>
-  <a id="login-btn" href="/login" style="display: block; margin: 10px 0;">Login</a><script>
-    document.addEventListener('DOMContentLoaded',()=>{
-      fetch('/whoami',{credentials:'include'}).then(r=>r.json()).then(d=>{if(d.username){document.getElementById('user-status').innerHTML=`Logged in as <a href="/login?ref=${encodeURIComponent(d.username)}">${d.username}</a> | <a href="/logout">Log out</a>`;let v=document.getElementById('view-referrals');v.href=`/referrals?referred_by=${encodeURIComponent(d.username)}`;v.style.display='block';}});
-      const p=new URLSearchParams(window.location.search),ref=p.get('ref')||'',ri=document.getElementById('referred_by');if(ref){ri.value=ref;ri.readOnly=true;window.history.replaceState(null,document.title,window.location.pathname);}  
+  <label>First Name:</label>
+  <input type="text" id="first_name" required />
+
+  <label>Last Name:</label>
+  <input type="text" id="last_name" required />
+
+  <label>Referred By:</label>
+  <input type="text" id="referred_by" placeholder="Type who referred you" />
+
+  <button id="submit-btn">Submit</button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const statusEl = document.getElementById('user-status');
+      const loginBtn = document.getElementById('login-btn');
+      const viewBtn = document.getElementById('view-referrals');
+
+      // Determine referrer from URL query param
+      const params = new URLSearchParams(window.location.search);
+      const refParam = params.get('ref') || '';
+
+      // Fill referred_by if present
+      const refInput = document.getElementById('referred_by');
+      if (refParam) {
+        refInput.value = refParam;
+        refInput.readOnly = true;
+        window.history.replaceState(null, document.title, window.location.pathname);
+      }
+
+      // Check login status
+      fetch('/whoami', { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.username) {
+            // logged in
+            statusEl.innerHTML = `Logged in as <strong>${data.username}</strong>`;
+            viewBtn.href = `/referrals?referred_by=${encodeURIComponent(data.username)}`;
+            viewBtn.style.display = 'block';
+          } else {
+            // not logged in
+            loginBtn.href = refParam ? `/login?ref=${encodeURIComponent(refParam)}` : '/login';
+            loginBtn.style.display = 'block';
+          }
+        })
+        .catch(() => {
+          loginBtn.style.display = 'block';
+        });
+
+      // Submit handler
+      document.getElementById('submit-btn').addEventListener('click', () => {
+        const data = {
+          first_name: document.getElementById('first_name').value,
+          last_name: document.getElementById('last_name').value,
+          referred_by: refInput.value
+        };
+        fetch('/add', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Submit failed');
+            return res.text();
+          })
+          .then(msg => {
+            alert(msg);
+            document.getElementById('first_name').value = '';
+            document.getElementById('last_name').value = '';
+          })
+          .catch(err => {
+            console.error(err);
+            alert('Error submitting data');
+          });
+      });
     });
-    function submitForm(){const d={first_name:document.getElementById('first_name').value,last_name:document.getElementById('last_name').value,referred_by:document.getElementById('referred_by').value};fetch('/add',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>{if(!r.ok)throw'';return r.text()}).then(m=>{alert(m);document.getElementById('first_name').value='';document.getElementById('last_name').value='';}).catch(()=>alert('Error'));}
   </script>
 </body>
 </html>
