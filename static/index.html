@@ -1,60 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Referrer Signup</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Referrer Login</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button, a { margin: 5px 0; display: block; }
-    #message { color: green; margin-top: 10px; }
+    input, button { margin: 5px 0; display: block; }
+    #home-btn { margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <h2>Referrer Signup</h2>
+  <!-- Back to Home button -->
+  <button id="home-btn" onclick="window.location.href='/'">Back to Home</button>
 
-  <label>Username:</label>
-  <input type="text" id="signup-username" placeholder="Choose a username" required>
+  <h2>Referrer Login</h2>
+  <p>Logging in as: <strong id="ref-name"></strong></p>
 
-  <label>Email:</label>
-  <input type="email" id="signup-email" placeholder="Your email address" required>
+  <label for="username">Username:</label>
+  <input type="text" id="username" placeholder="Username" />
 
-  <label>Referred By:</label>
-  <input type="text" id="signup-referred" placeholder="Who referred you (optional)">
+  <label for="password">Password:</label>
+  <input type="password" id="password" placeholder="Password" />
 
-  <button id="signup-btn">Create Account</button>
-
-  <p>Already have an account? <a href="/login">Login here</a></p>
-
-  <div id="message"></div>
+  <button id="login-btn">Login</button>
+  <button id="create-account">Create Account</button>
 
   <script>
-    document.getElementById('signup-btn').addEventListener('click', () => {
-      const username = document.getElementById('signup-username').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const referredBy = document.getElementById('signup-referred').value.trim();
-      if (!username || !email) {
-        alert('Username and email are required.');
-        return;
-      }
+    // Read referrer code from URL (?ref=...)
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || '';
+    document.getElementById('ref-name').textContent = ref;
 
-      fetch('/register', {
+    // Handle Create Account button
+    document.getElementById('create-account').addEventListener('click', () => {
+      window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
+    });
+
+    // Handle Login button
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      if (!u || !p) {
+        return alert('Please enter both username and password.');
+      }
+      fetch('/login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username, password: email })
+        body: JSON.stringify({ username: u, password: p })
       })
-      .then(res => res.text().then(txt => ({ ok: res.ok, txt })))
-      .then(({ ok, txt }) => {
-        if (ok) {
-          document.getElementById('message').textContent = 'Account created! Please login.';
-        } else {
-          alert('Error: ' + txt);
-        }
+      .then(res => {
+        if (!res.ok) throw new Error();
+        // Redirect to referrals list on success
+        window.location.href = `/referrals?referred_by=${encodeURIComponent(ref)}`;
       })
-      .catch(err => {
-        console.error(err);
-        alert('Signup failed.');
+      .catch(() => {
+        alert('Login failed: please check your username and password.');
       });
     });
   </script>
