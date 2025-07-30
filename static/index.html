@@ -1,99 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Referral Form</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referrer Login</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button, a { margin: 5px 0; display: block; }
-    #user-status { margin-bottom: 20px; }
-    #actions { margin-top: 20px; }
+    input, button { margin: 5px 0; display: block; }
   </style>
 </head>
 <body>
-  <!-- User status and actions -->
-  <div id="user-status"></div>
-  <div id="actions">
-    <a id="login-btn" href="/login" style="display: none;">Login</a>
-    <a id="view-referrals" href="#" style="display: none;">View Your Referrals</a>
-  </div>
+  <h2>Referrer Login</h2>
+  <p>Logging in as: <strong id="ref-name"></strong></p>
 
-  <h2>Referral Form</h2>
-  <label>First Name:</label>
-  <input type="text" id="first_name" required />
+  <label>Username:</label>
+  <input type="text" id="username" placeholder="Username">
 
-  <label>Last Name:</label>
-  <input type="text" id="last_name" required />
+  <label>Password:</label>
+  <input type="password" id="password" placeholder="Password">
 
-  <label>Referred By:</label>
-  <input type="text" id="referred_by" placeholder="Type who referred you" />
-
-  <button id="submit-btn">Submit</button>
+  <button id="login-btn">Login</button>
+  <button id="create-account">Create Account</button>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const statusEl = document.getElementById('user-status');
-      const loginBtn = document.getElementById('login-btn');
-      const viewBtn = document.getElementById('view-referrals');
+    // Read referrer from URL (?ref=...)
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || '';
+    document.getElementById('ref-name').textContent = ref;
 
-      // Determine referrer from URL query param
-      const params = new URLSearchParams(window.location.search);
-      const refParam = params.get('ref') || '';
+    // Create Account button handler
+    document.getElementById('create-account').addEventListener('click', () => {
+      window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
+    });
 
-      // Fill referred_by if present
-      const refInput = document.getElementById('referred_by');
-      if (refParam) {
-        refInput.value = refParam;
-        refInput.readOnly = true;
-        window.history.replaceState(null, document.title, window.location.pathname);
-      }
+    // Login button handler
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
 
-      // Check login status
-      fetch('/whoami', { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-          if (data.username) {
-            // logged in
-            statusEl.innerHTML = `Logged in as <strong>${data.username}</strong>`;
-            viewBtn.href = `/referrals?referred_by=${encodeURIComponent(data.username)}`;
-            viewBtn.style.display = 'block';
-          } else {
-            // not logged in
-            loginBtn.href = refParam ? `/login?ref=${encodeURIComponent(refParam)}` : '/login';
-            loginBtn.style.display = 'block';
-          }
-        })
-        .catch(() => {
-          loginBtn.style.display = 'block';
-        });
-
-      // Submit handler
-      document.getElementById('submit-btn').addEventListener('click', () => {
-        const data = {
-          first_name: document.getElementById('first_name').value,
-          last_name: document.getElementById('last_name').value,
-          referred_by: refInput.value
-        };
-        fetch('/add', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        })
-          .then(res => {
-            if (!res.ok) throw new Error('Submit failed');
-            return res.text();
-          })
-          .then(msg => {
-            alert(msg);
-            document.getElementById('first_name').value = '';
-            document.getElementById('last_name').value = '';
-          })
-          .catch(err => {
-            console.error(err);
-            alert('Error submitting data');
-          });
+      fetch('/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Login failed');
+        // On success, redirect to referrals page for this user
+        window.location.href = `/referrals?referred_by=${encodeURIComponent(ref)}`;
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Login failed: please check your username and password.');
       });
     });
   </script>
