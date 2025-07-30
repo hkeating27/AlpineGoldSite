@@ -62,7 +62,19 @@
     document.getElementById('login-btn').addEventListener('click', () => {
       window.location.href = '/login';
     });
+    <script>
+    // … existing login script …
+
+    // Back to Home button
+    const backBtn = document.createElement('button');
+    backBtn.textContent = 'Back to Home';
+    backBtn.style.marginTop = '10px';
+    backBtn.addEventListener('click', () => {
+      window.location.href = '/';
+    });
+    document.body.insertBefore(backBtn, document.getElementById('create-account'));
   </script>
 </body>
 </html>
+
 
