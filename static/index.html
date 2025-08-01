@@ -3,78 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Referrer Signup</title>
+  <title>Referral Form</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { margin: 5px 0; display: block; width: 100%; max-width: 300px; }
-    #login-btn { background: none; border: none; color: blue; text-decoration: underline; cursor: pointer; padding: 0; margin-top: 10px; }
+    label, input, button, a { display: block; margin: 8px 0; }
+    input { width: 100%; max-width: 300px; padding: 8px; }
+    button { padding: 8px 16px; }
+    #status { margin-top: 10px; color: green; }
   </style>
 </head>
 <body>
-  <h2>Create a Referral Account</h2>
+  <h2>Referral Form</h2>
 
-  <label for="signup-username">Username:</label>
-  <input type="text" id="signup-username" placeholder="Choose a username" required />
+  <label for="name">Name:</label>
+  <input type="text" id="name" placeholder="Your name" required />
 
-  <label for="signup-email">Email:</label>
-  <input type="email" id="signup-email" placeholder="Your email address" required />
+  <label for="email">Email:</label>
+  <input type="email" id="email" placeholder="Your email" required />
 
-  <label for="signup-referred">Referred By:</label>
-  <input type="text" id="signup-referred" placeholder="Who referred you (optional)" />
+  <label for="referred_by">Referred By (code):</label>
+  <input type="text" id="referred_by" placeholder="Referral code" required />
 
-  <button id="signup-btn">Create Account</button>
+  <button id="submit-btn">Submit</button>
+  <p>Referrer? <a href="/login">Login here</a></p>
 
-  <p>Already have an account?</p>
-  <button id="login-btn">Login</button>
-
-  <div id="message" style="color: green; margin-top: 10px;"></div>
+  <div id="status"></div>
 
   <script>
-    // Signup handler
-    document.getElementById('signup-btn').addEventListener('click', () => {
-      const username = document.getElementById('signup-username').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const referredBy = document.getElementById('signup-referred').value.trim();
-      if (!username || !email) {
-        return alert('Username and email are required.');
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      const data = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        referred_by: document.getElementById('referred_by').value.trim()
+      };
+      if (!data.name || !data.email || !data.referred_by) {
+        return alert('Please fill in all fields.');
       }
-      fetch('/register', {
+      fetch('/add', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password: email, referred_by: referredBy })
+        body: JSON.stringify(data)
       })
-      .then(res => res.text().then(txt => ({ ok: res.ok, txt })))
-      .then(({ ok, txt }) => {
-        if (ok) {
-          document.getElementById('message').textContent = 'Account created! Please login.';
-        } else {
-          alert('Error: ' + txt);
-        }
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.text();
       })
-      .catch(err => {
-        console.error(err);
-        alert('Signup failed.');
+      .then(msg => {
+        document.getElementById('status').textContent = msg;
+        // clear fields
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('referred_by').value = '';
+      })
+      .catch(() => {
+        alert('Submission failed. Please try again.');
       });
     });
-
-    // Login button
-    document.getElementById('login-btn').addEventListener('click', () => {
-      window.location.href = '/login';
-    });
-    <script>
-    // … existing login script …
-
-    // Back to Home button
-    const backBtn = document.createElement('button');
-    backBtn.textContent = 'Back to Home';
-    backBtn.style.marginTop = '10px';
-    backBtn.addEventListener('click', () => {
-      window.location.href = '/';
-    });
-    document.body.insertBefore(backBtn, document.getElementById('create-account'));
   </script>
 </body>
 </html>
-
 
