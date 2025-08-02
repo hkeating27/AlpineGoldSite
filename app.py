@@ -87,9 +87,9 @@ def do_login():
     u = data.get('username','').strip().lower()
     p = data.get('password','')
     # Admin check\    if u == 'admin_dennis' and p == 'metroid_prime':
-        session['username'] = u
-        session['is_admin'] = True
-        return jsonify(success=True, role='admin', username=u)
+    session['username'] = u
+    session['is_admin'] = True
+    return jsonify(success=True, role='admin', username=u)
     # Referrer check
     conn = get_conn()
     cur = conn.cursor()
@@ -169,5 +169,6 @@ def admin_list_users():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
