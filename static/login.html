@@ -10,6 +10,7 @@
     input { width: 100%; max-width: 300px; padding: 8px; }
     button { padding: 8px 16px; }
     #actions { margin-top: 20px; }
+    #message { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -29,6 +30,7 @@
     <button id="login-btn">Login</button>
     <button id="create-account">Create Account</button>
   </div>
+  <div id="message"></div>
 
   <script>
     // Read referrer (if any) from URL
@@ -37,36 +39,40 @@
     document.getElementById('ref-name').textContent = ref;
 
     // Create Account
-    document.getElementById('create-account').onclick = () => {
+    document.getElementById('create-account').addEventListener('click', () => {
       window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
-    };
+    });
 
-    // Login handler
-    document.getElementById('login-btn').onclick = () => {
+    // Login handler using API response for role
+    document.getElementById('login-btn').addEventListener('click', () => {
       const u = document.getElementById('username').value.trim();
       const p = document.getElementById('password').value;
-      if (!u || !p) return alert('Enter username and password.');
-
+      const msgEl = document.getElementById('message');
+      msgEl.textContent = '';
+      if (!u || !p) {
+        return msgEl.textContent = 'Enter username and password.';
+      }
       fetch('/login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Login failed');
-        // On success, redirect based on user
-        if (u === 'admin_dennis') {
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          return msgEl.textContent = 'Login failed: please check your credentials.';
+        }
+        if (data.role === 'admin') {
           window.location.href = '/admin';
         } else {
-          // normal referrer
-          window.location.href = `/referrals?referred_by=${encodeURIComponent(u)}`;
+          window.location.href = `/referrals?referred_by=${encodeURIComponent(data.username)}`;
         }
       })
       .catch(() => {
-        alert('Login failed: please check your username and password.');
+        msgEl.textContent = 'Login error. Please try again.';
       });
-    };
+    });
   </script>
 </body>
 </html>
