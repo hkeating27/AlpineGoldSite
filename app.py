@@ -41,13 +41,7 @@ def create_app():
     def index():
         return send_from_directory('static', 'index.html')
 
-    # Static and pretty URL catch-all
-    @app.route('/<path:filename>')
-    def catch_all(filename):
-        if filename.startswith('$ref='):
-            ref = filename.split('=',1)[1]
-            return redirect(url_for('login_page', ref=ref))
-        return send_from_directory('static', filename)
+    # (catch-all moved below explicit routes)
 
     # Registration routes
     @app.route('/register', methods=['GET'])
@@ -156,6 +150,15 @@ def create_app():
             users = cur.fetchall()
         return jsonify(users)
 
+    # Static and pretty URL catch-all (moved last)
+    @app.route('/<path:filename>')
+    def catch_all(filename):
+        if filename.startswith('$ref='):
+            ref = filename.split('=',1)[1]
+            return redirect(url_for('login_page', ref=ref))
+        return send_from_directory('static', filename)
+
+
     return app
 
 # Expose WSGI app for Gunicorn
@@ -165,6 +168,7 @@ app = def_app
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
 
