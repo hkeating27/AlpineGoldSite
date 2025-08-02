@@ -1,43 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Referrer Login</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { margin: 5px 0; display: block; }
+    label, input, button { display: block; margin: 8px 0; }
+    input { width: 100%; max-width: 300px; padding: 8px; }
+    button { padding: 8px 16px; }
+    #actions { margin-top: 20px; }
   </style>
 </head>
 <body>
+  <!-- Back to Home -->
   <button onclick="window.location.href='/'">Back to Home</button>
+
   <h2>Referrer Login</h2>
   <p>Logging in as: <strong id="ref-name"></strong></p>
 
-  <label>Username:</label>
-  <input type="text" id="username" placeholder="Username">
+  <label for="username">Username:</label>
+  <input type="text" id="username" placeholder="Username" />
 
-  <label>Password:</label>
-  <input type="password" id="password" placeholder="Password">
+  <label for="password">Password:</label>
+  <input type="password" id="password" placeholder="Password" />
 
-  <button id="login-btn">Login</button>
-  <button id="create-account">Create Account</button>
+  <div id="actions">
+    <button id="login-btn">Login</button>
+    <button id="create-account">Create Account</button>
+  </div>
 
   <script>
-    // Read referrer from URL (?ref=...)
+    // Read referrer (if any) from URL
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref') || '';
     document.getElementById('ref-name').textContent = ref;
 
-    // Create Account button handler
-    document.getElementById('create-account').addEventListener('click', () => {
+    // Create Account
+    document.getElementById('create-account').onclick = () => {
       window.location.href = `/register?ref=${encodeURIComponent(ref)}`;
-    });
+    };
 
-    // Login button handler
-    document.getElementById('login-btn').addEventListener('click', () => {
+    // Login handler
+    document.getElementById('login-btn').onclick = () => {
       const u = document.getElementById('username').value.trim();
       const p = document.getElementById('password').value;
+      if (!u || !p) return alert('Enter username and password.');
 
       fetch('/login', {
         method: 'POST',
@@ -47,14 +55,18 @@
       })
       .then(res => {
         if (!res.ok) throw new Error('Login failed');
-        // On success, redirect to referrals page for this user
-        window.location.href = `/referrals?referred_by=${encodeURIComponent(ref)}`;
+        // On success, redirect based on user
+        if (u === 'admin_dennis') {
+          window.location.href = '/admin';
+        } else {
+          // normal referrer
+          window.location.href = `/referrals?referred_by=${encodeURIComponent(u)}`;
+        }
       })
-      .catch(err => {
-        console.error(err);
+      .catch(() => {
         alert('Login failed: please check your username and password.');
       });
-    });
+    };
   </script>
 </body>
 </html>
