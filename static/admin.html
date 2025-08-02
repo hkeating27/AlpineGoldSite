@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; max-width: 600px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h2>All Registered Referrers</h2>
+  <button onclick="window.location.href='/'">Back to Home</button>
+  <table id="users-table">
+    <thead><tr><th>Username</th><th>Referred By</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    fetch('/admin/users', { credentials: 'include' })
+      .then(r => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then(users => {
+        const tbody = document.querySelector('#users-table tbody');
+        users.forEach(([u, ref]) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${u}</td><td>${ref}</td>`;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(() => {
+        alert('Failed to load user list. Are you logged in as admin?');
+        window.location.href = '/login';
+      });
+  </script>
+</body>
+</html>
