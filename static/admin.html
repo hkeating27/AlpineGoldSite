@@ -14,11 +14,12 @@
   <h2>All Registered Referrers</h2>
   <button onclick="window.location.href='/'">Back to Home</button>
   <table id="users-table">
-    <thead><tr><th>Username</th><th>Referred By</th></tr></thead>
+    <thead><tr><th>Username</th><th>Referred By</th><th>Code</th></tr></thead>
     <tbody></tbody>
   </table>
 
   <script>
+    // MUST include credentials so the session cookie is sent
     fetch('/admin/users', { credentials: 'include' })
       .then(r => {
         if (!r.ok) throw new Error();
@@ -26,9 +27,9 @@
       })
       .then(users => {
         const tbody = document.querySelector('#users-table tbody');
-        users.forEach(([u, ref]) => {
+        users.forEach(([u, ref, code]) => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${u}</td><td>${ref}</td>`;
+          tr.innerHTML = `<td>${u}</td><td>${ref}</td><td>${code}</td>`;
           tbody.appendChild(tr);
         });
       })
