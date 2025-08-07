@@ -31,7 +31,9 @@ def create_app():
           CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            referred_by TEXT,
+            code TEXT UNIQUE NOT NULL
           );
         ''')
         conn.commit()
@@ -40,8 +42,6 @@ def create_app():
     @app.route('/')
     def index():
         return send_from_directory('static', 'index.html')
-
-    # (catch-all moved below explicit routes)
 
     # Registration routes
     @app.route('/register', methods=['GET'])
@@ -53,18 +53,22 @@ def create_app():
         data = request.get_json()
         u = data.get('username','').strip().lower()
         p = data.get('password','')
+        ref_by = data.get('referred_by','').strip().lower()
+        code = data.get('code','').strip()
+        if not code:
+            return jsonify(success=False, error='Referral code required'), 400
         phash = generate_password_hash(p)
         try:
             with get_conn() as conn:
                 cur = conn.cursor()
                 cur.execute(
-                  'INSERT INTO users (username, password_hash) VALUES (%s, %s)',
-                  (u, phash)
+                  'INSERT INTO users (username, password_hash, referred_by, code) VALUES (%s, %s, %s, %s)',
+                  (u, phash, ref_by, code)
                 )
                 conn.commit()
             return jsonify(success=True), 200
         except psycopg2.IntegrityError:
-            return jsonify(success=False, error='Username exists'), 400
+            return jsonify(success=False, error='Username or code exists'), 400
 
     # Login routes
     @app.route('/login', methods=['GET'])
@@ -76,8 +80,10 @@ def create_app():
         data = request.get_json()
         u = data.get('username','').strip().lower()
         p = data.get('password','')
-        # Admin check
-        if u == 'admin_dennis' and p == 'metroid_prime':
+        # Admin check (env vars)
+        ADMIN_USER = os.environ.get('ADMIN_USER')
+        ADMIN_PASS = os.environ.get('ADMIN_PASS')
+        if ADMIN_USER and ADMIN_PASS and u == ADMIN_USER and p == ADMIN_PASS:
             session['username'] = u
             session['is_admin'] = True
             return jsonify(success=True, role='admin', username=u)
@@ -146,11 +152,11 @@ def create_app():
             abort(401)
         with get_conn() as conn:
             cur = conn.cursor()
-            cur.execute('SELECT username, referred_by FROM users')
+            cur.execute('SELECT username, referred_by, code FROM users')
             users = cur.fetchall()
         return jsonify(users)
 
-    # Static and pretty URL catch-all (moved last)
+    # Static and pretty URL catch-all (last)
     @app.route('/<path:filename>')
     def catch_all(filename):
         if filename.startswith('$ref='):
@@ -158,17 +164,14 @@ def create_app():
             return redirect(url_for('login_page', ref=ref))
         return send_from_directory('static', filename)
 
-
     return app
 
 # Expose WSGI app for Gunicorn
-def_app = create_app()
-app = def_app
+app = create_app()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
 
 
 
